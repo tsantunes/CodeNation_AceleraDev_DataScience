@@ -15,16 +15,20 @@ Este *notebook* apresenta a análise realizada para resolver o desafio da `#code
 
 #### **Workflow**
 1. Definição do Problema
-2. Obtenção dos Dados
-3. Exploração dos Dados
-4. Preparação dos Dados
-5. Construção do Modelo
-6. Avaliação
-7. Conclusão
+2. Carregamento dos Dados
+3. Pré-Processamento dos Dados
+4. Exploração dos Dados
+5. Processamento dos Dados
+6. Preparação dos Dados
+7. Construção do Modelo
+8. Avaliação
+9. Conclusão
 
 #### **1. Definição do Problema**
 
-O contexto do desafio gira em torno dos resultados do ENEM 2016 (disponíveis no arquivo train.csv). Este arquivo, e apenas ele, deve ser utilizado para todos os desafios. Qualquer dúvida a respeito das colunas, consulte o [Dicionário dos Microdados do Enem 2016](https://s3-us-west-1.amazonaws.com/acceleration-assets-highway/data-science/dicionario-de-dados.zip).
+Antes da aplicação das mais diversas ferramentas e algoritmos para sair **"prevendo"** tudo por aí é importante o entendimento do problema e tipo de negócio que se está inserido. Este tipo de informação ajudará na conscientização e definição do problema e por fim na escolha das técnicas e ferramentas que melhor auxiliem na resolução do problema e na entrega de um bom resultado.
+
+Nesse sentido, o contexto desse desafio gira em torno dos resultados do ENEM 2016 (disponíveis no arquivo train.csv). Este arquivo, e apenas ele, deve ser utilizado para todos os desafios. Qualquer dúvida a respeito das colunas, consulte o [Dicionário dos Microdados do Enem 2016](https://s3-us-west-1.amazonaws.com/acceleration-assets-highway/data-science/dicionario-de-dados.zip).
 
 Muitas universidades brasileiras utilizam o ENEM para selecionar seus futuros alunos e alunas. Isto é feito com uma média ponderada das notas das provas de matemática, ciências da natureza, linguagens e códigos, ciências humanas e redação. Determine os 20 melhores colocados, por ordem, para os pesos abaixo:
 
@@ -36,7 +40,58 @@ Muitas universidades brasileiras utilizam o ENEM para selecionar seus futuros al
 
 No arquivo test.csv crie um modelo para prever nota da prova de matemática (coluna **NU_NOTA_MT**) de quem participou do ENEM 2016.
 
-#### **2. Obtenção dos Dados**
+
+#### **2. Carregamento dos Dados**
+
+Os dados serão carregados a partir da função `read.csv` que é uma função nativa do R. Os arquivos podem ser encontrados no meu [repositório no github](https://github.com/tsantunes/CodeNation_AceleraDev_DataScience/tree/master/00_Desafio).
+
+```{r}
+dados.treino <- read.csv("train.csv")
+dados.teste <- read.csv("test.csv")
+```
+
+#### **3. Pré-Processamento dos Dados**
+
+Nesta etapa eu geralmente realizo algumas operações preliminares nos dados, como por exemplo, ajuste nos nomes das variáveis, formatações de datas, transformações nos tipos das variáveis e entre outras operações básicas para deixar o conjunto de dados com as características necessárias para a exploração dos dados. 
+
+Como foram fornecidos os arquivos de treino e teste e ambos arquivos apresentam dimensões diferentes vou realizar um `subset` a partir do arquivo de `teste` para uma primeira reducionalidade de variáveis. Essa decisão parte do pressuposto de que o arquivo fornecido para teste já é uma primeira indicação de quais variáveis podem ser utilizadas na construção do modelo.
+
+```{r}
+dim(dados.treino)
+dim(dados.teste)
+```
+> Cabe observar que nos dados de teste `dados.teste` a variável **NU_NOTA_MT** que se deseja prever os valores não é apresentada, pois o objetivo deste conjunto de dados é servir para testar o algorítmo e realizar as previsões.
+
+Para a manipulação dos dados e gerar o novo conjunto de dados de treino `dados.treino.novo` irei utilizar o pacote `dplyr`.
+```{r}
+library(dplyr)
+
+# criar um dataframe com os nomes das variaveis do conjunto de teste
+nomes.colunas <- tibble(colnames(dados.teste))
+nomes.colunas <- rbind(nomes.colunas, "NU_NOTA_MT")
+
+# selecionar as variaveis com base no objeto nomes.colunas
+dados.treino.novo <- dados.treino %>% select(nomes.colunas$`colnames(dados.teste)`)
+
+```
+
+#### **4. Exploração dos Dados**
+
+A etapa de exploração dos dados, conhecida também como `EDA (Exploratory Data Analysis)`, é uma das etapas de grande importância em `data science`. É a partir dela que consguimos obter `insights` e entender como os dados estão distribuídos, descobrir padrões, identificar anomalias, testar hipóteses, checar premissas e sumarizar as estatísticas dos dados em tabelas e/ou gráficos.
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
 
 
 

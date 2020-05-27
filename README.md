@@ -23,6 +23,8 @@ O [AceleraDev](https://www.codenation.dev/aceleradev/ds-online-1/) é um program
 
 Aqui você encontra os notebooks dos meus projetos na área de Data Science realizados durante o Programa de Aceleração em Data Science feito pela `#codenation`.
 
+# Sobre Mim
+
 
 
 

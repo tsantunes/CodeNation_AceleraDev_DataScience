@@ -1762,8 +1762,10 @@ summary {
 <h4><strong>Workflow</strong></h4>
 <ol style="list-style-type: decimal">
 <li>Definição do Problema</li>
-<li>Obtenção dos Dados</li>
+<li>Carregamento dos Dados</li>
+<li>Pré-Processamento dos Dados</li>
 <li>Exploração dos Dados</li>
+<li>Processamento dos Dados</li>
 <li>Preparação dos Dados</li>
 <li>Construção do Modelo</li>
 <li>Avaliação</li>
@@ -1772,7 +1774,8 @@ summary {
 </div>
 <div id="definição-do-problema" class="section level4">
 <h4><strong>1. Definição do Problema</strong></h4>
-<p>O contexto do desafio gira em torno dos resultados do ENEM 2016 (disponíveis no arquivo train.csv). Este arquivo, e apenas ele, deve ser utilizado para todos os desafios. Qualquer dúvida a respeito das colunas, consulte o <a href="https://s3-us-west-1.amazonaws.com/acceleration-assets-highway/data-science/dicionario-de-dados.zip">Dicionário dos Microdados do Enem 2016</a>.</p>
+<p>Antes da aplicação das mais diversas ferramentas e algoritmos para sair <strong>“prevendo”</strong> tudo por aí é importante o entendimento do problema e tipo de negócio que se está inserido. Este tipo de informação ajudará na conscientização e definição do problema e por fim na escolha das técnicas e ferramentas que melhor auxiliem na resolução do problema e na entrega de um bom resultado.</p>
+<p>Nesse sentido, o contexto desse desafio gira em torno dos resultados do ENEM 2016 (disponíveis no arquivo train.csv). Este arquivo, e apenas ele, deve ser utilizado para todos os desafios. Qualquer dúvida a respeito das colunas, consulte o <a href="https://s3-us-west-1.amazonaws.com/acceleration-assets-highway/data-science/dicionario-de-dados.zip">Dicionário dos Microdados do Enem 2016</a>.</p>
 <p>Muitas universidades brasileiras utilizam o ENEM para selecionar seus futuros alunos e alunas. Isto é feito com uma média ponderada das notas das provas de matemática, ciências da natureza, linguagens e códigos, ciências humanas e redação. Determine os 20 melhores colocados, por ordem, para os pesos abaixo:</p>
 <ul>
 <li>matemática: 3</li>
@@ -1783,12 +1786,66 @@ summary {
 </ul>
 <p>No arquivo test.csv crie um modelo para prever nota da prova de matemática (coluna <strong>NU_NOTA_MT</strong>) de quem participou do ENEM 2016.</p>
 </div>
-<div id="obtenção-dos-dados" class="section level4">
-<h4><strong>2. Obtenção dos Dados</strong></h4>
+<div id="carregamento-dos-dados" class="section level4">
+<h4><strong>2. Carregamento dos Dados</strong></h4>
+<p>Os dados serão carregados a partir da função <code>read.csv</code> que é uma função nativa do R. Os arquivos podem ser encontrados no meu <a href="https://github.com/tsantunes/CodeNation_AceleraDev_DataScience/tree/master/00_Desafio">repositório no github</a>.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGFkb3MudGVzdGUgPC0gcmVhZC5jc3YoXCJ0ZXN0LmNzdlwiKVxuZGFkb3MudHJlaW5vIDwtIHJlYWQuY3N2KFwidHJhaW4uY3N2XCIpXG5gYGAifQ== -->
+<pre class="r"><code>dados.teste &lt;- read.csv(&quot;test.csv&quot;)
+dados.treino &lt;- read.csv(&quot;train.csv&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="pré-processamento-dos-dados" class="section level4">
+<h4><strong>3. Pré-Processamento dos Dados</strong></h4>
+<p>Nesta etapa eu geralmente realizo algumas operações preliminares nos dados, como por exemplo, ajuste nos nomes das variáveis, formatações de datas, transformações nos tipos das variáveis e entre outras operações básicas para deixar o conjunto de dados com as características necessárias para a exploração dos dados.</p>
+<p>Como foram fornecidos os arquivos de treino e teste e ambos arquivos apresentam dimensões diferentes vou realizar um <code>subset</code> a partir do arquivo de <code>teste</code> para uma primeira reducionalidade de variáveis. Essa decisão parte do pressuposto de que o arquivo fornecido para teste já é uma primeira indicação de quais variáveis podem ser utilizadas na construção do modelo.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGltKGRhZG9zLnRyZWlubylcbmBgYCJ9 -->
+<pre class="r"><code>dim(dados.treino)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDEzNzMwICAgMTY3XG4ifQ== -->
+<pre><code>[1] 13730   167</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGltKGRhZG9zLnRlc3RlKVxuYGBgIn0= -->
+<pre class="r"><code>dim(dados.teste)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDQ1NzYgICA0N1xuIn0= -->
+<pre><code>[1] 4576   47</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<blockquote>
+<p>Cabe observar que nos dados de teste <code>dados.teste</code> a variável <strong>NU_NOTA_MT</strong> que se deseja prever os valores não é apresentada, pois o objetivo deste conjunto de dados é servir para testar o algorítmo e realizar as previsões.</p>
+</blockquote>
+<p>Para a manipulação dos dados e gerar o novo conjunto de dados de treino <code>dados.treino.novo</code> irei utilizar o pacote <code>dplyr</code>.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShkcGx5cilcbm5vbWVzLmNvbHVuYXMgPC0gdGliYmxlKGNvbG5hbWVzKGRhZG9zLnRlc3RlKSlcbm5vbWVzLmNvbHVuYXMgPC0gcmJpbmQobm9tZXMuY29sdW5hcywgXCJOVV9OT1RBX01UXCIpXG5cbmRhZG9zLnRyZWluby5ub3ZvIDwtIGRhZG9zLnRyZWlubyAlPiUgc2VsZWN0KG5vbWVzLmNvbHVuYXMkYGNvbG5hbWVzKGRhZG9zLnRlc3RlKWApXG5cbmBgYCJ9 -->
+<pre class="r"><code>library(dplyr)
+nomes.colunas &lt;- tibble(colnames(dados.teste))
+nomes.colunas &lt;- rbind(nomes.colunas, &quot;NU_NOTA_MT&quot;)
+
+dados.treino.novo &lt;- dados.treino %&gt;% select(nomes.colunas$`colnames(dados.teste)`)
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="exploração-dos-dados" class="section level4">
+<h4><strong>4. Exploração dos Dados</strong></h4>
+<p>A etapa de exploração dos dados, conhecida também como <code>EDA (Exploratory Data Analysis)</code>, é uma das etapas de grande importância em <code>data science</code>. É a partir dela que consguimos obter <code>insights</code> e entender como os dados estão distribuídos, descobrir padrões, identificar anomalias, testar hipóteses, checar premissas e sumarizar as estatísticas dos dados em tabelas e/ou gráficos.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQo8cCBhbGlnbj0iY2VudGVyIj4KIVtFbmVtIDIwMTZdKGltZy9lbmVtLnBuZykKPC9wPgo8cCBhbGlnbj0iY2VudGVyIj4KICAgICAgICA8aDM+PHN0cm9uZz4iRGVzYWZpbyBEZXNjdWJyYSBhcyBtZWxob3JlcyBub3RhcyBkZSBtYXRlbcOhdGljYSBkbyBFTkVNIDIwMTYiPC9zdHJvbmc+PC9oMz4KPC9wPgoKLS0tCgpFc3RlICpub3RlYm9vayogYXByZXNlbnRhIGEgYW7DoWxpc2UgcmVhbGl6YWRhIHBhcmEgcmVzb2x2ZXIgbyBkZXNhZmlvIGRhIGAjY29kZW5hdGlvbmAgcGFyYSBzZXIgYWNlaXRvIG5vIGBBY2VsZXJhRGV2IERhdGEgU2NpZW5jZWAgcXVlIGNvbnNpc3RlIGVtIGNyaWFyIHVtIG1vZGVsbyBwYXJhIHByZXZlciBhIG5vdGEgZGEgcHJvdmEgZGUgbWF0ZW3DoXRpY2EgZGUgcXVlbSBwYXJ0aWNpcG91IGRvIEVORU0gMjAxNi4gQSBzZWd1aXIgc2Vyw6EgYXByZXNlbnRhZG8gbyBmbHV4byBkZSB0cmFiYWxobyByZWFsaXphZG8uCgojIyMjICoqV29ya2Zsb3cqKgoxLiBEZWZpbmnDp8OjbyBkbyBQcm9ibGVtYQoyLiBPYnRlbsOnw6NvIGRvcyBEYWRvcwozLiBFeHBsb3Jhw6fDo28gZG9zIERhZG9zCjQuIFByZXBhcmHDp8OjbyBkb3MgRGFkb3MKNS4gQ29uc3RydcOnw6NvIGRvIE1vZGVsbwo2LiBBdmFsaWHDp8Ojbwo3LiBDb25jbHVzw6NvCgojIyMjICoqMS4gRGVmaW5pw6fDo28gZG8gUHJvYmxlbWEqKgoKTyBjb250ZXh0byBkbyBkZXNhZmlvIGdpcmEgZW0gdG9ybm8gZG9zIHJlc3VsdGFkb3MgZG8gRU5FTSAyMDE2IChkaXNwb27DrXZlaXMgbm8gYXJxdWl2byB0cmFpbi5jc3YpLiBFc3RlIGFycXVpdm8sIGUgYXBlbmFzIGVsZSwgZGV2ZSBzZXIgdXRpbGl6YWRvIHBhcmEgdG9kb3Mgb3MgZGVzYWZpb3MuIFF1YWxxdWVyIGTDunZpZGEgYSByZXNwZWl0byBkYXMgY29sdW5hcywgY29uc3VsdGUgbyBbRGljaW9uw6FyaW8gZG9zIE1pY3JvZGFkb3MgZG8gRW5lbSAyMDE2XShodHRwczovL3MzLXVzLXdlc3QtMS5hbWF6b25hd3MuY29tL2FjY2VsZXJhdGlvbi1hc3NldHMtaGlnaHdheS9kYXRhLXNjaWVuY2UvZGljaW9uYXJpby1kZS1kYWRvcy56aXApLgoKTXVpdGFzIHVuaXZlcnNpZGFkZXMgYnJhc2lsZWlyYXMgdXRpbGl6YW0gbyBFTkVNIHBhcmEgc2VsZWNpb25hciBzZXVzIGZ1dHVyb3MgYWx1bm9zIGUgYWx1bmFzLiBJc3RvIMOpIGZlaXRvIGNvbSB1bWEgbcOpZGlhIHBvbmRlcmFkYSBkYXMgbm90YXMgZGFzIHByb3ZhcyBkZSBtYXRlbcOhdGljYSwgY2nDqm5jaWFzIGRhIG5hdHVyZXphLCBsaW5ndWFnZW5zIGUgY8OzZGlnb3MsIGNpw6puY2lhcyBodW1hbmFzIGUgcmVkYcOnw6NvLiBEZXRlcm1pbmUgb3MgMjAgbWVsaG9yZXMgY29sb2NhZG9zLCBwb3Igb3JkZW0sIHBhcmEgb3MgcGVzb3MgYWJhaXhvOgoKLSBtYXRlbcOhdGljYTogMwotIGNpw6puY2lhcyBkYSBuYXR1cmV6YTogMgotIGxpbmd1YWdlbnMgZSBjw7NkaWdvczogMS41Ci0gY2nDqm5jaWFzIGh1bWFuYXM6IDEKLSByZWRhw6fDo286IDMKCk5vIGFycXVpdm8gdGVzdC5jc3YgY3JpZSB1bSBtb2RlbG8gcGFyYSBwcmV2ZXIgbm90YSBkYSBwcm92YSBkZSBtYXRlbcOhdGljYSAoY29sdW5hICoqTlVfTk9UQV9NVCoqKSBkZSBxdWVtIHBhcnRpY2lwb3UgZG8gRU5FTSAyMDE2LgoKIyMjIyAqKjIuIE9idGVuw6fDo28gZG9zIERhZG9zKioKCgoK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQo8cCBhbGlnbj0iY2VudGVyIj4KIVtFbmVtIDIwMTZdKGltZy9lbmVtLnBuZykKPC9wPgo8cCBhbGlnbj0iY2VudGVyIj4KICAgICAgICA8aDM+PHN0cm9uZz4iRGVzYWZpbyBEZXNjdWJyYSBhcyBtZWxob3JlcyBub3RhcyBkZSBtYXRlbcOhdGljYSBkbyBFTkVNIDIwMTYiPC9zdHJvbmc+PC9oMz4KPC9wPgoKLS0tCgpFc3RlICpub3RlYm9vayogYXByZXNlbnRhIGEgYW7DoWxpc2UgcmVhbGl6YWRhIHBhcmEgcmVzb2x2ZXIgbyBkZXNhZmlvIGRhIGAjY29kZW5hdGlvbmAgcGFyYSBzZXIgYWNlaXRvIG5vIGBBY2VsZXJhRGV2IERhdGEgU2NpZW5jZWAgcXVlIGNvbnNpc3RlIGVtIGNyaWFyIHVtIG1vZGVsbyBwYXJhIHByZXZlciBhIG5vdGEgZGEgcHJvdmEgZGUgbWF0ZW3DoXRpY2EgZGUgcXVlbSBwYXJ0aWNpcG91IGRvIEVORU0gMjAxNi4gQSBzZWd1aXIgc2Vyw6EgYXByZXNlbnRhZG8gbyBmbHV4byBkZSB0cmFiYWxobyByZWFsaXphZG8uCgojIyMjICoqV29ya2Zsb3cqKgoxLiBEZWZpbmnDp8OjbyBkbyBQcm9ibGVtYQoyLiBDYXJyZWdhbWVudG8gZG9zIERhZG9zCjMuIFByw6ktUHJvY2Vzc2FtZW50byBkb3MgRGFkb3MKNC4gRXhwbG9yYcOnw6NvIGRvcyBEYWRvcwo1LiBQcm9jZXNzYW1lbnRvIGRvcyBEYWRvcwo2LiBQcmVwYXJhw6fDo28gZG9zIERhZG9zCjcuIENvbnN0cnXDp8OjbyBkbyBNb2RlbG8KOC4gQXZhbGlhw6fDo28KOS4gQ29uY2x1c8OjbwoKIyMjIyAqKjEuIERlZmluacOnw6NvIGRvIFByb2JsZW1hKioKCkFudGVzIGRhIGFwbGljYcOnw6NvIGRhcyBtYWlzIGRpdmVyc2FzIGZlcnJhbWVudGFzIGUgYWxnb3JpdG1vcyBwYXJhIHNhaXIgKioicHJldmVuZG8iKiogdHVkbyBwb3IgYcOtIMOpIGltcG9ydGFudGUgbyBlbnRlbmRpbWVudG8gZG8gcHJvYmxlbWEgZSB0aXBvIGRlIG5lZ8OzY2lvIHF1ZSBzZSBlc3TDoSBpbnNlcmlkby4gRXN0ZSB0aXBvIGRlIGluZm9ybWHDp8OjbyBhanVkYXLDoSBuYSBjb25zY2llbnRpemHDp8OjbyBlIGRlZmluacOnw6NvIGRvIHByb2JsZW1hIGUgcG9yIGZpbSBuYSBlc2NvbGhhIGRhcyB0w6ljbmljYXMgZSBmZXJyYW1lbnRhcyBxdWUgbWVsaG9yIGF1eGlsaWVtIG5hIHJlc29sdcOnw6NvIGRvIHByb2JsZW1hIGUgbmEgZW50cmVnYSBkZSB1bSBib20gcmVzdWx0YWRvLgoKTmVzc2Ugc2VudGlkbywgbyBjb250ZXh0byBkZXNzZSBkZXNhZmlvIGdpcmEgZW0gdG9ybm8gZG9zIHJlc3VsdGFkb3MgZG8gRU5FTSAyMDE2IChkaXNwb27DrXZlaXMgbm8gYXJxdWl2byB0cmFpbi5jc3YpLiBFc3RlIGFycXVpdm8sIGUgYXBlbmFzIGVsZSwgZGV2ZSBzZXIgdXRpbGl6YWRvIHBhcmEgdG9kb3Mgb3MgZGVzYWZpb3MuIFF1YWxxdWVyIGTDunZpZGEgYSByZXNwZWl0byBkYXMgY29sdW5hcywgY29uc3VsdGUgbyBbRGljaW9uw6FyaW8gZG9zIE1pY3JvZGFkb3MgZG8gRW5lbSAyMDE2XShodHRwczovL3MzLXVzLXdlc3QtMS5hbWF6b25hd3MuY29tL2FjY2VsZXJhdGlvbi1hc3NldHMtaGlnaHdheS9kYXRhLXNjaWVuY2UvZGljaW9uYXJpby1kZS1kYWRvcy56aXApLgoKTXVpdGFzIHVuaXZlcnNpZGFkZXMgYnJhc2lsZWlyYXMgdXRpbGl6YW0gbyBFTkVNIHBhcmEgc2VsZWNpb25hciBzZXVzIGZ1dHVyb3MgYWx1bm9zIGUgYWx1bmFzLiBJc3RvIMOpIGZlaXRvIGNvbSB1bWEgbcOpZGlhIHBvbmRlcmFkYSBkYXMgbm90YXMgZGFzIHByb3ZhcyBkZSBtYXRlbcOhdGljYSwgY2nDqm5jaWFzIGRhIG5hdHVyZXphLCBsaW5ndWFnZW5zIGUgY8OzZGlnb3MsIGNpw6puY2lhcyBodW1hbmFzIGUgcmVkYcOnw6NvLiBEZXRlcm1pbmUgb3MgMjAgbWVsaG9yZXMgY29sb2NhZG9zLCBwb3Igb3JkZW0sIHBhcmEgb3MgcGVzb3MgYWJhaXhvOgoKLSBtYXRlbcOhdGljYTogMwotIGNpw6puY2lhcyBkYSBuYXR1cmV6YTogMgotIGxpbmd1YWdlbnMgZSBjw7NkaWdvczogMS41Ci0gY2nDqm5jaWFzIGh1bWFuYXM6IDEKLSByZWRhw6fDo286IDMKCk5vIGFycXVpdm8gdGVzdC5jc3YgY3JpZSB1bSBtb2RlbG8gcGFyYSBwcmV2ZXIgbm90YSBkYSBwcm92YSBkZSBtYXRlbcOhdGljYSAoY29sdW5hICoqTlVfTk9UQV9NVCoqKSBkZSBxdWVtIHBhcnRpY2lwb3UgZG8gRU5FTSAyMDE2LgoKCiMjIyMgKioyLiBDYXJyZWdhbWVudG8gZG9zIERhZG9zKioKCk9zIGRhZG9zIHNlcsOjbyBjYXJyZWdhZG9zIGEgcGFydGlyIGRhIGZ1bsOnw6NvIGByZWFkLmNzdmAgcXVlIMOpIHVtYSBmdW7Dp8OjbyBuYXRpdmEgZG8gUi4gT3MgYXJxdWl2b3MgcG9kZW0gc2VyIGVuY29udHJhZG9zIG5vIG1ldSBbcmVwb3NpdMOzcmlvIG5vIGdpdGh1Yl0oaHR0cHM6Ly9naXRodWIuY29tL3RzYW50dW5lcy9Db2RlTmF0aW9uX0FjZWxlcmFEZXZfRGF0YVNjaWVuY2UvdHJlZS9tYXN0ZXIvMDBfRGVzYWZpbykuCgpgYGB7cn0KZGFkb3MudHJlaW5vIDwtIHJlYWQuY3N2KCJ0cmFpbi5jc3YiKQpkYWRvcy50ZXN0ZSA8LSByZWFkLmNzdigidGVzdC5jc3YiKQpgYGAKCiMjIyMgKiozLiBQcsOpLVByb2Nlc3NhbWVudG8gZG9zIERhZG9zKioKCk5lc3RhIGV0YXBhIGV1IGdlcmFsbWVudGUgcmVhbGl6byBhbGd1bWFzIG9wZXJhw6fDtWVzIHByZWxpbWluYXJlcyBub3MgZGFkb3MsIGNvbW8gcG9yIGV4ZW1wbG8sIGFqdXN0ZSBub3Mgbm9tZXMgZGFzIHZhcmnDoXZlaXMsIGZvcm1hdGHDp8O1ZXMgZGUgZGF0YXMsIHRyYW5zZm9ybWHDp8O1ZXMgbm9zIHRpcG9zIGRhcyB2YXJpw6F2ZWlzIGUgZW50cmUgb3V0cmFzIG9wZXJhw6fDtWVzIGLDoXNpY2FzIHBhcmEgZGVpeGFyIG8gY29uanVudG8gZGUgZGFkb3MgY29tIGFzIGNhcmFjdGVyw61zdGljYXMgbmVjZXNzw6FyaWFzIHBhcmEgYSBleHBsb3Jhw6fDo28gZG9zIGRhZG9zLiAKCkNvbW8gZm9yYW0gZm9ybmVjaWRvcyBvcyBhcnF1aXZvcyBkZSB0cmVpbm8gZSB0ZXN0ZSBlIGFtYm9zIGFycXVpdm9zIGFwcmVzZW50YW0gZGltZW5zw7VlcyBkaWZlcmVudGVzIHZvdSByZWFsaXphciB1bSBgc3Vic2V0YCBhIHBhcnRpciBkbyBhcnF1aXZvIGRlIGB0ZXN0ZWAgcGFyYSB1bWEgcHJpbWVpcmEgcmVkdWNpb25hbGlkYWRlIGRlIHZhcmnDoXZlaXMuIEVzc2EgZGVjaXPDo28gcGFydGUgZG8gcHJlc3N1cG9zdG8gZGUgcXVlIG8gYXJxdWl2byBmb3JuZWNpZG8gcGFyYSB0ZXN0ZSBqw6Egw6kgdW1hIHByaW1laXJhIGluZGljYcOnw6NvIGRlIHF1YWlzIHZhcmnDoXZlaXMgcG9kZW0gc2VyIHV0aWxpemFkYXMgbmEgY29uc3RydcOnw6NvIGRvIG1vZGVsby4KCmBgYHtyfQpkaW0oZGFkb3MudHJlaW5vKQpkaW0oZGFkb3MudGVzdGUpCmBgYAo+IENhYmUgb2JzZXJ2YXIgcXVlIG5vcyBkYWRvcyBkZSB0ZXN0ZSBgZGFkb3MudGVzdGVgIGEgdmFyacOhdmVsICoqTlVfTk9UQV9NVCoqIHF1ZSBzZSBkZXNlamEgcHJldmVyIG9zIHZhbG9yZXMgbsOjbyDDqSBhcHJlc2VudGFkYSwgcG9pcyBvIG9iamV0aXZvIGRlc3RlIGNvbmp1bnRvIGRlIGRhZG9zIMOpIHNlcnZpciBwYXJhIHRlc3RhciBvIGFsZ29yw610bW8gZSByZWFsaXphciBhcyBwcmV2aXPDtWVzLgoKUGFyYSBhIG1hbmlwdWxhw6fDo28gZG9zIGRhZG9zIGUgZ2VyYXIgbyBub3ZvIGNvbmp1bnRvIGRlIGRhZG9zIGRlIHRyZWlubyBgZGFkb3MudHJlaW5vLm5vdm9gIGlyZWkgdXRpbGl6YXIgbyBwYWNvdGUgYGRwbHlyYC4KYGBge3J9CmxpYnJhcnkoZHBseXIpCgojIGNyaWFyIHVtIGRhdGFmcmFtZSBjb20gb3Mgbm9tZXMgZGFzIHZhcmlhdmVpcyBkbyBjb25qdW50byBkZSB0ZXN0ZQpub21lcy5jb2x1bmFzIDwtIHRpYmJsZShjb2xuYW1lcyhkYWRvcy50ZXN0ZSkpCm5vbWVzLmNvbHVuYXMgPC0gcmJpbmQobm9tZXMuY29sdW5hcywgIk5VX05PVEFfTVQiKQoKIyBzZWxlY2lvbmFyIGFzIHZhcmlhdmVpcyBjb20gYmFzZSBubyBvYmpldG8gbm9tZXMuY29sdW5hcwpkYWRvcy50cmVpbm8ubm92byA8LSBkYWRvcy50cmVpbm8gJT4lIHNlbGVjdChub21lcy5jb2x1bmFzJGBjb2xuYW1lcyhkYWRvcy50ZXN0ZSlgKQoKYGBgCgojIyMjICoqNC4gRXhwbG9yYcOnw6NvIGRvcyBEYWRvcyoqCgpBIGV0YXBhIGRlIGV4cGxvcmHDp8OjbyBkb3MgZGFkb3MsIGNvbmhlY2lkYSB0YW1iw6ltIGNvbW8gYEVEQSAoRXhwbG9yYXRvcnkgRGF0YSBBbmFseXNpcylgLCDDqSB1bWEgZGFzIGV0YXBhcyBkZSBncmFuZGUgaW1wb3J0w6JuY2lhIGVtIGBkYXRhIHNjaWVuY2VgLiDDiSBhIHBhcnRpciBkZWxhIHF1ZSBjb25zZ3VpbW9zIG9idGVyIGBpbnNpZ2h0c2AgZSBlbnRlbmRlciBjb21vIG9zIGRhZG9zIGVzdMOjbyBkaXN0cmlidcOtZG9zLCBkZXNjb2JyaXIgcGFkcsO1ZXMsIGlkZW50aWZpY2FyIGFub21hbGlhcywgdGVzdGFyIGhpcMOzdGVzZXMsIGNoZWNhciBwcmVtaXNzYXMgZSBzdW1hcml6YXIgYXMgZXN0YXTDrXN0aWNhcyBkb3MgZGFkb3MgZW0gdGFiZWxhcyBlL291IGdyw6FmaWNvcy4KCgoKYGBge3J9CgpgYGAKCgoKCgoKCgoKCgo=</div>
 
 
 
