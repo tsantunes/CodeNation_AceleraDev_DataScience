@@ -18,11 +18,9 @@ Este *notebook* apresenta a análise realizada para resolver o desafio da `#code
 2. Carregamento dos Dados
 3. Pré-Processamento dos Dados
 4. Exploração dos Dados
-5. Processamento dos Dados
-6. Preparação dos Dados
-7. Construção do Modelo
-8. Avaliação
-9. Conclusão
+5. Construção do Modelo
+6. Avaliação
+7. Conclusão
 
 #### **1. Definição do Problema**
 
@@ -79,12 +77,185 @@ dados.treino.novo <- dados.treino %>% select(nomes.colunas$`colnames(dados.teste
 
 A etapa de exploração dos dados, conhecida também como `EDA (Exploratory Data Analysis)`, é uma das etapas de grande importância em `data science`. É a partir dela que consguimos obter `insights` e entender como os dados estão distribuídos, descobrir padrões, identificar anomalias, testar hipóteses, checar premissas e sumarizar as estatísticas dos dados em tabelas e/ou gráficos.
 
+Inicialmente iremos verificar se existem dados faltates nos dados de treino. Em seguida iremos verificar a estrutura dos dados e a sumário de informações iniciais.
+```{r}
+# checar a existência de registros faltantes (NAs)
+sum(is.na(dados.treino.novo))
 
+# visualizar a estrutura dos dados
+str(dados.treino.novo)
+# sumarizar as informações de cada uma das variáveis
+summary(dados.treino.novo)
+```
+Visto que existem dados nulos nos dados de treino podemos usar uma das três abordagens a seguir para tratar os casos faltantes:
+
+1. Excluir os dados nulos do dataset. O que poderia diminuir drasticamente as amostras para treinar o modelo;
+2. Substituir os valores nulos por zeros. O que conserva o número de amostras do dataset.
+3. Substituir os valores nulos com o valor da média das features. O que conserva o número de amostras do dataset.
+
+A abordagem que utilizarei será a de número 1, irei realizar a retirada dos dados faltantes do dataset. Essa ação resultará em cerca de `3597 / 13730 = 0.2619811` 26% de redução no dataset de treino.
 
 ```{r}
+# retirar registros faltantes e mudar o tipo das variáveis SG_UF_RESIDENCIA e TP_SEXO
+library(tidyr)
+
+dados.treino.novo <- dados.treino.novo %>% drop_na(NU_NOTA_LC, NU_NOTA_CH) %>% 
+        mutate(SG_UF_RESIDENCIA = as.factor(SG_UF_RESIDENCIA),
+               TP_SEXO = as.factor(TP_SEXO))
+
+# checar as transformações
+summary(dados.treino.novo)
+```
+
+A seguir iremos realizar uma análise exploratória de correlação entre as variáveis. Com base nos dados de treino vamos selecionar algumas das variáveis que podem apresentar forte correlação com a variável *target* que queremos prever e servir como um primeiro direcionador de quais variáveis considerar no modelo.
+
+```{r}
+# subset com os dados de treino
+dados.corr <- dados.treino.novo %>% select(NU_NOTA_CN,NU_NOTA_CH,
+                                           NU_NOTA_LC,NU_NOTA_COMP1,
+                                           NU_NOTA_COMP2, NU_NOTA_COMP3,
+                                           NU_NOTA_COMP4, NU_NOTA_COMP5,
+                                           NU_NOTA_REDACAO, NU_NOTA_MT, NU_IDADE)
+# criação da matriz de correlação
+matriz.corr <- cor(dados.corr, method="spearman")
+
+library(corrplot)
+# cores do gráfico
+col <- colorRampPalette(c("#ffe7ed", "#ffd4de","#ffacc0","#ff4a76"))
+# gráfico de correlação
+corrplot(matriz.corr, method="color", col=col(200),
+         type="full", order="AOE", 
+         addCoef.col = "black",
+         tl.col="black", tl.srt=45, 
+         tl.cex = 0.7, number.font = 0.6, number.cex = 0.55)
+```
+
+Para concluir a fase exploratória dos dados iremos realizar e observar a análise das estatísticas descritivas das variáveis relacionadas com as notas dos alunos.
+
+```{r}
+library(psych)
+
+dados.treino.novo %>% select(NU_NOTA_CN,NU_NOTA_CH,
+                                NU_NOTA_LC,NU_NOTA_COMP1,
+                                NU_NOTA_COMP2, NU_NOTA_COMP3,
+                                NU_NOTA_COMP4, NU_NOTA_COMP5,
+                                NU_NOTA_REDACAO, NU_NOTA_MT, NU_IDADE) %>% 
+        describe()
 
 ```
 
+#### **5. Construção do Modelo**
+
+Considerando que o objetivo é prever o nota da prova de matemática a partir das notas das demais provas iremos usar a técnica de Regressão Linear que é uma técnica amplamente utilizada e aceita para previsão de dados numéricos. A Seguir é apresentado a construção e teste dos 5 modelos utilizados para a análise dos resultados. 
+
+O objetivo é testar a relação entre as variáveis e por fim será escolhido o modelo que melhor descrever o comportamento da nota de matemática em relação as demais variáveis. Em seguida, no próximo item são apresentadas as métricas de avaliação para cada um dos modelos.
+
+##### **MODELO 1**
+```{r}
+# modelo 1
+modelo1 <- lm(NU_NOTA_MT~NU_NOTA_CN+NU_NOTA_CH+NU_NOTA_LC+NU_NOTA_COMP1+
+                      NU_NOTA_COMP2+NU_NOTA_COMP3+NU_NOTA_COMP4+NU_NOTA_COMP5+
+                      NU_NOTA_REDACAO+NU_IDADE+TP_SEXO+SG_UF_RESIDENCIA,
+              data = dados.treino.novo)
+
+summary(modelo1)
+
+dados.treino.novo$MODEL1 <- predict(modelo1, newdata = dados.treino.novo)
+
+actuals_preds <- data.frame(cbind(actuals=dados.treino.novo$NU_NOTA_MT, 
+                                  predicteds=dados.treino.novo$MODEL1))
+cor(actuals_preds)
+```
+##### **MODELO 2**
+```{r}
+# modelo 2
+modelo2 <- lm(NU_NOTA_MT~NU_NOTA_CN+NU_NOTA_CH+NU_NOTA_LC+NU_NOTA_COMP1+
+                      NU_NOTA_COMP2+NU_NOTA_COMP3+NU_NOTA_COMP4+NU_NOTA_COMP5+
+                      NU_IDADE+TP_SEXO,
+              data = dados.treino.novo)
+
+summary(modelo2)
+dados.treino.novo$MODEL2 <- predict(modelo2, newdata = dados.treino.novo)
+actuals_preds2 <- data.frame(cbind(actuals=dados.treino.novo$NU_NOTA_MT, 
+                                  predicteds=dados.treino.novo$MODEL2))
+
+cor(actuals_preds2)
+```
+##### **MODELO 3**
+```{r}
+# modelo 3 
+modelo3 <- lm(NU_NOTA_MT~NU_NOTA_CN+NU_NOTA_CH+NU_NOTA_LC+NU_NOTA_COMP4+NU_IDADE+TP_SEXO,
+              data = dados.treino.novo)
+
+summary(modelo3)
+dados.treino.novo$MODEL3 <- predict(modelo3, newdata = dados.treino.novo)
+actuals_preds3 <- data.frame(cbind(actuals=dados.treino.novo$NU_NOTA_MT, 
+                                   predicteds=dados.treino.novo$MODEL3))
+
+cor(actuals_preds3)
+```
+##### **MODELO 4**
+```{r}
+# modelo 4 
+modelo4 <- lm(NU_NOTA_MT~NU_NOTA_CN+NU_NOTA_CH+NU_NOTA_LC+NU_NOTA_COMP4+NU_IDADE+TP_SEXO+
+                      Q001+Q002+Q006+Q024+Q027+Q047,
+              data = dados.treino.novo)
+
+summary(modelo4)
+dados.treino.novo$MODEL4 <- predict(modelo4, newdata = dados.treino.novo)
+actuals_preds4 <- data.frame(cbind(actuals=dados.treino.novo$NU_NOTA_MT, 
+                                   predicteds=dados.treino.novo$MODEL4))
+
+cor(actuals_preds4)
+```
+##### **MODELO 5**
+```{r}
+# modelo 5 
+modelo5 <- lm(NU_NOTA_MT~NU_NOTA_CN+NU_NOTA_CH+NU_NOTA_LC+NU_NOTA_COMP4+NU_IDADE+TP_SEXO+
+                      Q006+Q047,
+              data = dados.treino.novo)
+
+summary(modelo5)
+dados.treino.novo$MODEL5 <- predict(modelo5, newdata = dados.treino.novo)
+actuals_preds5 <- data.frame(cbind(actuals=dados.treino.novo$NU_NOTA_MT, 
+                                   predicteds=dados.treino.novo$MODEL5))
+
+cor(actuals_preds5)
+```
+
+
+#### **6. Avaliação**
+
+Para a avaliação dos modelos irei utilizar o `package DMwR` desenvolvido pelo autor do livro *"Data Mining with R, learning with case studies"*, Luis Torgo. O objetivo desta etapa é avaliar as principais métricas e selecionar o modelo que apresentar o menor erro de previsão. 
+
+Nesse sentido o modelo que apresentou o melhor resultado foi o `modelo 4` com RMSE de 74.18 e MAE de 58.54.
+
+```{r}
+library(DMwR)
+
+regr.eval(actuals_preds$actuals, actuals_preds$predicteds)
+regr.eval(actuals_preds2$actuals, actuals_preds2$predicteds)
+regr.eval(actuals_preds3$actuals, actuals_preds3$predicteds)
+regr.eval(actuals_preds4$actuals, actuals_preds4$predicteds)
+regr.eval(actuals_preds5$actuals, actuals_preds5$predicteds)
+```
+
+#### **7. Conclusão**
+
+Por fim, nos dados de teste é criada a variável `NU_NOTA_MT` para armazenar as previsões realizadas a partir do modelo 4. Em seguida é gerado o arquivo de resposta `answer.csv`.
+
+```{r}
+# criação da variável para armazenar a nota de matemática
+dados.teste$NU_NOTA_MT <- predict(modelo4, newdata = dados.teste)
+# subset para criar o arquivo de respostas
+# Foi realizado o input de 0 (zero) para as notas faltantes
+answer <- dados.teste %>% select(NU_INSCRICAO, NU_NOTA_MT) %>% 
+        mutate(NU_NOTA_MT = ifelse(is.na(NU_NOTA_MT), 0, NU_NOTA_MT))
+# comando para salvar os dados em um arquivo CSV para submeter na plataforma
+write.csv(answer, "answer.csv", row.names = F)
+
+# O score com a resposta foi de 93.38%.
+```
 
 
 
