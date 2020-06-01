@@ -5,6 +5,8 @@ output: html_notebook
 <p align="center">
 ![Enem 2016](img/enem.png)
 </p>
+
+
 <p align="center">
         <h3><strong>"Desafio Descubra as melhores notas de matemática do ENEM 2016"</strong></h3>
 </p>
@@ -251,14 +253,19 @@ dados.teste$NU_NOTA_MT <- predict(modelo4, newdata = dados.teste)
 # Foi realizado o input de 0 (zero) para as notas faltantes
 answer <- dados.teste %>% select(NU_INSCRICAO, NU_NOTA_MT) %>% 
         mutate(NU_NOTA_MT = ifelse(is.na(NU_NOTA_MT), 0, NU_NOTA_MT))
+
+
+
 # comando para salvar os dados em um arquivo CSV para submeter na plataforma
+# O score com a resposta foi de 93.38%.
 write.csv(answer, "answer.csv", row.names = F)
 
-# O score com a resposta foi de 93.38%.
+
 
 ```
 
-
+<p align="center">
+[![Tiago Antunes](img/TA.png)](https://www.linkedin.com/in/tsantunes/)
 
 
 
