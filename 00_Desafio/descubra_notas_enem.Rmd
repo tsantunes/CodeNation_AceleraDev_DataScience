@@ -255,6 +255,7 @@ answer <- dados.teste %>% select(NU_INSCRICAO, NU_NOTA_MT) %>%
 write.csv(answer, "answer.csv", row.names = F)
 
 # O score com a resposta foi de 93.38%.
+
 ```
 
 
