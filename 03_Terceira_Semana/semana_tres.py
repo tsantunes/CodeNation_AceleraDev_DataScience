@@ -64,3 +64,16 @@ plt.title('Média do valor de alugél por cidade')
 plt.xticks(rotation=45)
 plt.show()
 
+#histograma
+sns.distplot(df['rent amount (R$)'])
+
+#scatterplot
+plt.figure(figsize = (12,6))
+sns.scatterplot(x = 'rent amount (R$)', y = 'bathroom', hue = 'city', size = 'aluguel_alto', data = df)
+
+#correlacao
+sns.heatmap(df.corr().round(2), annot=True)
+
+#FacetGrid - grid de comparação
+g = sns.FacetGrid(df, col='city', row='aluguel_alto')
+g = g.map(plt.hist, 'rent amount (R$)')
